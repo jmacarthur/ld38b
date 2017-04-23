@@ -84,13 +84,20 @@ function makeMap(gridX, gridY)
 }
 
 function drawMap(request, gridX, gridY) {
-    lineArray = request.responseText.split("\n");
     makeMap(gridX, gridY);
+    var mapctx = tile_bitmaps[[gridX, gridY]].getContext('2d');
+
+    if(request.status != 200) {
+	mapctx.fillStyle = "#404040";
+	mapctx.fillRect(0,0,512,512);
+	drawString(mapctx, "TILE MISSING "+gridX+","+gridY,32,200);
+	return;
+    }
+    lineArray = request.responseText.split("\n");
     var way_lines : string[] = new Array();
     var node_lon = new Array();
     var node_lat = new Array();
     console.log("Map data loaded.");
-    var mapctx = tile_bitmaps[[gridX, gridY]].getContext('2d');
 
     for(var l = 0;l< lineArray.length; l++) {
 	line = lineArray[l];
@@ -132,6 +139,21 @@ function resetGame()
     rot = 0.2;
 }
 
+function backgroundLoadTile(gridX, gridY)
+{
+    var request = new XMLHttpRequest();
+    var prefix_lon = gridX < 0 ? "w" : "e";
+    var prefix_lat = gridY < 0 ? "s" : "n";
+    var map_reference_name = prefix_lon+Math.abs(gridX)+prefix_lat+Math.abs(gridY);
+    request.open("GET", "maps/"+map_reference_name+".map", true);
+    request.onload = function(oEvent) {
+	drawMap(request,gridX,gridY);
+    }
+    console.log("Requested map data for "+gridX+","+gridY);
+    request.send(null);
+
+}
+
 function init()
 {
     mode = MODE_TITLE;
@@ -139,23 +161,8 @@ function init()
     springSound = new Audio("audio/boing.wav");
     makeTitleBitmaps();
 
-    var request = new XMLHttpRequest();
-    request.open("GET", "maps/w134n3207.map", true);
-    request.onload = function(oEvent) {
-	console.log("Data onLoad called");
-	drawMap(request,-134,3207);
-	
-    }
-    console.log("Requested map data.");
-    request.send(null);
-
-    var request2 = new XMLHttpRequest();
-    request2.open("GET", "maps/w133n3207.map", true);
-    request2.onload = function(oEvent) {
-	console.log("Data onLoad called");
-	drawMap(request2,-133,3207);
-    }
-    request2.send(null);
+    backgroundLoadTile(-134,3207);
+    backgroundLoadTile(-133,3207);
 
     return true;
 }
@@ -205,12 +212,25 @@ function int(x)
     return Math.floor(x);
 }
 
+function loadMoreMaps() : void
+{
+    var gridX = Math.floor(x * 60.0);
+    var gridY = Math.floor(y * 60.0);
+    for(var px = gridX - 3; px < gridX + 3; px++) {
+	for(var py = gridY - 3; py < gridY + 3; py++) {
+	    var bitmap = tile_bitmaps[[px,py]];
+	    if(bitmap == undefined) {
+		backgroundLoadTile(px,py);
+	    }
+	}
+    }
+}
+
 function movePlayer()
 {
     // Which grid are we in?
     var gridX = Math.floor(x * 60.0);
     var gridY = Math.floor(y * 60.0);
-    console.log("Looking up grid "+gridX+","+gridY);
     var tilebitmap = tile_bitmaps[[gridX,gridY]];
     speed = 0.00005;
     if(tilebitmap != undefined) {
@@ -225,6 +245,9 @@ function movePlayer()
     }
     x += speed* Math.cos(rot);
     y += speed* Math.sin(rot);
+
+    // Check and load maps if necessary
+    loadMoreMaps();
 }
 
 function processKeys() {
