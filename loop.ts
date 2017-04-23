@@ -83,6 +83,22 @@ function makeMap(gridX, gridY)
     tile_bitmaps[[gridX,gridY]] = mapBitmap;
 }
 
+function drawRoad(mapctx, way_nodes, width, colour, node_lon, node_lat, gridX, gridY)
+{
+    mapctx.beginPath();
+    mapctx.lineWidth = width;
+    mapctx.strokeStyle = colour;
+    for (var n=0;n<way_nodes.length;n++) {
+	var lon = node_lon[way_nodes[n]];
+	var lat = node_lat[way_nodes[n]];
+	var coords = translate_lonlat(lon, lat, gridX, gridY);
+	mapctx.lineTo(coords[0],coords[1],4,0,2*Math.PI);
+    }
+    mapctx.stroke();
+    mapctx.lineWidth = 1;
+}
+
+
 function drawMap(request, gridX, gridY) {
     makeMap(gridX, gridY);
     var mapctx = tile_bitmaps[[gridX, gridY]].getContext('2d');
@@ -110,25 +126,22 @@ function drawMap(request, gridX, gridY) {
 	    var coords = translate_lonlat(idlonlat[1], idlonlat[2], gridX, gridY);
 	    mapctx.fillStyle = "#ffffff";
 	    mapctx.beginPath();
-	    mapctx.arc(coords[0],coords[1],4,0,2*Math.PI);
+	    mapctx.arc(coords[0],coords[1],8,0,2*Math.PI);
 	    mapctx.fill();
 	}
     }
     for(var w=0;w<way_lines.length;w++) {
 	var way_nodes = way_lines[w].split(",");
-	mapctx.beginPath();
-	mapctx.lineWidth = 8;
-	mapctx.strokeStyle = "#ffffff";
-	for (var n=0;n<way_nodes.length;n++) {
-	    var lon = node_lon[way_nodes[n]];
-	    var lat = node_lat[way_nodes[n]];
-	    var coords = translate_lonlat(lon, lat, gridX, gridY);
-	    mapctx.lineTo(coords[0],coords[1],4,0,2*Math.PI);
-	}
-	mapctx.stroke();
-	mapctx.lineWidth = 1;
+	drawRoad(mapctx, way_nodes, 16, "#ffffff", node_lon, node_lat, gridX, gridY);
     }
-
+    for(var w=0;w<way_lines.length;w++) {
+	var way_nodes = way_lines[w].split(",");
+	drawRoad(mapctx, way_nodes, 8, "#7f7f7f", node_lon, node_lat, gridX, gridY);
+    }
+    for(var w=0;w<way_lines.length;w++) {
+	var way_nodes = way_lines[w].split(",");
+	drawRoad(mapctx, way_nodes, 2, "#ffffff", node_lon, node_lat, gridX, gridY);
+    }
 }
 
 
@@ -237,7 +250,7 @@ function movePlayer()
 	var mapctx = tile_bitmaps[[gridX,gridY]].getContext('2d');
 	var coords = translate_lonlat(x, y, gridX, gridY);
 	var pixel = mapctx.getImageData(int(coords[0]), int(coords[1]), 1, 1);
-	if(pixel.data[0] == 255) {
+	if(pixel.data[0] > 0) {
 	    speed = 4*speed;
 	} else {
 	    speed = 1*speed;
