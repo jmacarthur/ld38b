@@ -19,6 +19,8 @@ var total_museums : number = 0;
 var time : number = 0;
 var targetSpeed : number = 0;
 var actualSpeed : number = 0;
+var smoke = new Array();
+var smokeAmount : number = 1;
 function getImage(name)
 {
     image = new Image();
@@ -163,17 +165,21 @@ function drawMap(request, gridX, gridY) {
 	    var coords = translate_lonlat(idlonlat[1], idlonlat[2], gridX, gridY);
 	    mapctx.fillStyle = "#ffffff";
 	    mapctx.beginPath();
-	    mapctx.arc(coords[0],coords[1],8,0,2*Math.PI);
+	    mapctx.arc(coords[0],coords[1],16,0,2*Math.PI);
+	    mapctx.fill();
+	    mapctx.fillStyle = "#7f7f7f";
+	    mapctx.beginPath();
+	    mapctx.arc(coords[0],coords[1],12,0,2*Math.PI);
 	    mapctx.fill();
 	}
     }
     for(var w=0;w<way_lines.length;w++) {
 	var way_nodes = way_lines[w].split(",");
-	drawRoad(mapctx, way_nodes, 16, "#ffffff", node_lon, node_lat, gridX, gridY);
+	drawRoad(mapctx, way_nodes, 32, "#ffffff", node_lon, node_lat, gridX, gridY);
     }
     for(var w=0;w<way_lines.length;w++) {
 	var way_nodes = way_lines[w].split(",");
-	drawRoad(mapctx, way_nodes, 8, "#7f7f7f", node_lon, node_lat, gridX, gridY);
+	drawRoad(mapctx, way_nodes, 24, "#7f7f7f", node_lon, node_lat, gridX, gridY);
     }
     for(var w=0;w<way_lines.length;w++) {
 	var way_nodes = way_lines[w].split(",");
@@ -188,6 +194,9 @@ function resetGame()
     y = 53.45;
     rot = 0.2;
     time = 9*60;
+    smoke = new Array();
+    for(var i=0;i<8;i++) smoke.push([Math.random()*32-16,i*2]);
+
 }
 
 function updateMuseums(request)
@@ -318,8 +327,25 @@ function draw() {
 	ctx.rotate(-rot+Math.PI/2);
     }
     ctx.drawImage(playerImage, -16,-16);
+
+    for(var i=0;i<smoke.length;i++) {
+	ctx.fillStyle = "#7f7f7f";
+
+	ctx.globalAlpha = 0.3;
+	ctx.beginPath();
+	ctx.arc(smoke[i][0]*smoke[i][1]/32-8,smoke[i][1]*2+8,smoke[i][1]/2,0,Math.PI*2);
+	ctx.fill();
+	smoke[i][1] += 1;
+	if(smoke[i][1] > 16) {
+	    smoke[i][1] = 0;
+	    smoke[i][0] = Math.random()*32-16;
+	}
+    }
+
     ctx.restore();
 
+
+    
     // Finally, head-up display things
     var hours = Math.floor(time/60);
     var minutes = Math.floor(time % 60);
@@ -370,8 +396,10 @@ function movePlayer()
     }
     if(actualSpeed > targetSpeed) {
 	actualSpeed -= 0.1;
+	smokeAmount = 1;
     } else {
 	actualSpeed += 0.1;
+	smokeAmount = 5;
     }
     x += actualSpeed * speed * Math.cos(rot);
     y += actualSpeed * speed * Math.sin(rot);
