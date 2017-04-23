@@ -56,16 +56,20 @@ function makeTitleBitmaps()
     bitfont.onload = paintTitleBitmaps;
 }
 
+function radians(degrees : number) : number
+{
+    return Math.PI*2*(degrees/360.0);
+}
+
 function translate_lonlat(lon, lat)
 {
     // Offset
-    var offsetX = -2.74;
-    var offsetY = 53.296;
+    //var offsetX = -2.74; var offsetY = 53.296; // Actual minimum of the map
+    var offsetX = -2.2352297; var offsetY = 53.451005; // Somewhere around Princess Parkway
     var general_scale = Math.max(0.81,0.31);
-    var general_scale = 0.5; // For testing
-    var scaleX = 512/general_scale; // Output scale 0-512, input range 0.81;
+    var general_scale = 1/20; // 1 minute of arc is about 1.1km at this lat
+    var scaleX = (512/general_scale) / Math.cos(radians(offsetY)); // Output scale 0-512, input range 0.81;
     var scaleY = 512/general_scale; // Output scale 0-512, input range 0.31 but using 0.81 to make everything square;
-    
     return [(lon - offsetX) * scaleX, (lat - offsetY) * scaleY];
 }
 
@@ -86,17 +90,31 @@ function drawMap(request) {
     for(var l = 0;l< lineArray.length; l++) {
 	line = lineArray[l];
 	if(line[0] == "w") {
-	    way_lines.push(line);
+	    way_lines.push(line.substr(1));
 	} else if(line[0] == "n") {
 	    var idlonlat = line.substr(1).split(",");
 	    node_lon[idlonlat[0]] = idlonlat[1];
 	    node_lat[idlonlat[0]] = idlonlat[2];
 	    var coords = translate_lonlat(idlonlat[1], idlonlat[2]);
-	    mapctx.strokeStyle = "#ffffff";
+	    mapctx.fillStyle = "#ffffff";
 	    mapctx.beginPath();
 	    mapctx.arc(coords[0],coords[1],4,0,2*Math.PI);
-	    mapctx.stroke();
+	    mapctx.fill();
 	}
+    }
+    for(var w=0;w<way_lines.length;w++) {
+	var way_nodes = way_lines[w].split(",");
+	mapctx.beginPath();
+	mapctx.lineWidth = 8;
+	mapctx.strokeStyle = "#ffffff";
+	for (var n=0;n<way_nodes.length;n++) {
+	    var lon = node_lon[way_nodes[n]];
+	    var lat = node_lat[way_nodes[n]];
+	    var coords = translate_lonlat(lon, lat);
+	    mapctx.lineTo(coords[0],coords[1],4,0,2*Math.PI);
+	}
+	mapctx.stroke();
+	mapctx.lineWidth = 1;
     }
 }
 
