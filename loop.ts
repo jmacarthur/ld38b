@@ -4,11 +4,10 @@ var body = document.getElementsByTagName('body')[0];
 var keysDown = new Array();
 var SCREENWIDTH  = 640;
 var SCREENHEIGHT = 480;
-var MODE_TITLE = 0;
-var MODE_PLAY  = 1;
-var MODE_WIN   = 2;
+enum Mode { TITLE, PLAY, WIN };
 
 // Game variables
+var mode : Mode;
 var x : number, y:number;
 var rot :number;
 var tile_bitmaps = new Array();
@@ -21,6 +20,18 @@ var targetSpeed : number = 0;
 var actualSpeed : number = 0;
 var smoke = new Array();
 var smokeAmount : number = 1;
+var stopRunloop : boolean;
+
+// Images loaded from the server
+var bitfont : Image;
+var bitfont16: Image;
+
+// Images created on the fly
+var playerImage : Image;
+var titleBitmap: Image;
+var winBitmap: Image;
+var museumImage : Image;
+
 function getImage(name)
 {
     image = new Image();
@@ -38,13 +49,13 @@ function drawChar(context, c, x, y)
 
 function drawString(context, string, x, y) {
     string = string.toUpperCase();
-    for(i = 0; i < string.length; i++) {
+    for(var i = 0; i < string.length; i++) {
 	drawChar(context, string[i], x, y);
 	x += 12;
     }
 }
 
-function paintTitleBitmaps()
+function paintTitleBitmaps(titlectx, winctx) : void
 {
     drawString(titlectx, 'Driving simulator for small worlds',32,32);
     drawString(titlectx, 'Visit all museums before the end of the day.',32,64);
@@ -64,7 +75,9 @@ function makeTitleBitmaps()
     winctx = winBitmap.getContext('2d');
     bitfont = new Image();
     bitfont.src = "graphics/bitfont16.png";
-    bitfont.onload = paintTitleBitmaps;
+    bitfont.onload = function() {
+	paintTitleBitmaps(titlectx, winctx);
+    }
 }
 
 function radians(degrees : number) : number
@@ -239,7 +252,7 @@ function backgroundLoadGoals()
 
 function init()
 {
-    mode = MODE_TITLE;
+    mode = Mode.TITLE;
     playerImage = getImage("car");
     museumImage = getImage("greek-temple");
     springSound = new Audio("audio/boing.wav");
@@ -258,7 +271,7 @@ function init()
 
 function draw() {
     ctx.fillRect(0, 0, SCREENWIDTH, SCREENHEIGHT);
-    if(mode == MODE_TITLE) {
+    if(mode == Mode.TITLE) {
 	ctx.drawImage(titleBitmap, 0, 0);
 	return;
     }
@@ -353,7 +366,7 @@ function draw() {
     var clocktext : string = hours+":"+minutes;
     drawString(ctx, clocktext, 580,8);
     
-    if(mode == MODE_WIN) {
+    if(mode == Mode.WIN) {
 	ctx.drawImage(winBitmap, 0, 0);
     }
 }
@@ -435,11 +448,11 @@ function processKeys() {
 }
 
 function drawRepeat() {
-    if(mode != MODE_TITLE) {
+    if(mode != Mode.TITLE) {
 	processKeys();
     }
 
-    if(mode == MODE_PLAY) {
+    if(mode == Mode.PLAY) {
 	movePlayer();
     }
     draw();
@@ -450,9 +463,9 @@ function drawRepeat() {
 function press(c) {
     console.log("press "+c);
     if(c==32) {
-	if(mode == MODE_TITLE) {
+	if(mode == Mode.TITLE) {
 	    resetGame();
-	    mode = MODE_PLAY;
+	    mode = Mode.PLAY;
 	}
     } else {
 	keysDown[c] = 1;
@@ -476,14 +489,14 @@ if (canvas.getContext('2d')) {
 	    stopRunloop=true;
 	}
 	if(c == 32) {
-	    if(mode == MODE_TITLE) {
+	    if(mode == Mode.TITLE) {
 		resetGame();
-		mode = MODE_PLAY;
+		mode = Mode.PLAY;
 	    }
 	}
 	if(c == 82) {
-	    if(mode == MODE_WIN) {
-		mode = MODE_TITLE;
+	    if(mode == Mode.WIN) {
+		mode = Mode.TITLE;
 	    }
 	}
 	if(c==77) {
