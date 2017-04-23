@@ -13,6 +13,7 @@ var x : number, y:number;
 var rot :number;
 var tile_bitmaps = new Array();
 var museums = new Array();
+var track_forward_mode : boolean = false;
 
 function getImage(name)
 {
@@ -68,8 +69,7 @@ function translate_lonlat(lon, lat, gridX, gridY)
     // Offset
     //var offsetX = -2.74; var offsetY = 53.296; // Actual minimum of the map
     //var offsetX = -2.2352297; var offsetY = 53.451005; // Somewhere around Princess Parkway
-    var offsetX = gridX*(1/60.0); var offsetY = gridY*(1/60.0);
-    var general_scale = Math.max(0.81,0.31);
+    var offsetX = gridX*(1/60.0); var offsetY = (gridY)*(1/60.0);
     var general_scale = 1/60; // 1 minute of arc is about 1.1km at this lat
     var scaleX = 512/general_scale; // Output scale 0-512, input range 0.81;
     var scaleY = 512/general_scale; // Output scale 0-512, input range 0.31 but using 0.81 to make everything square;
@@ -202,18 +202,22 @@ function init()
 }
 
 function draw() {
-    ctx.fillStyle = "#00c000";
     ctx.fillRect(0, 0, SCREENWIDTH, SCREENHEIGHT);
-    ctx.save();
-    var track_forward_mode : boolean = false;;
-    if(track_forward_mode) {
-	ctx.translate(320,240);
-	ctx.rotate(-rot-Math.PI/2);
-	ctx.translate(-320,-240);
-    }
     if(mode == MODE_TITLE) {
 	ctx.drawImage(titleBitmap, 0, 0);
 	return;
+    }
+    ctx.fillStyle = "#00c000";
+    ctx.save();
+
+    // Invert the screen, since positive latitude should be negative Y
+    ctx.scale(1,-1);
+    ctx.translate(0,-480);
+    
+    if(track_forward_mode) {
+	ctx.translate(320,240);
+	ctx.rotate(-rot+Math.PI/2);
+	ctx.translate(-320,-240);
     }
     var gridX = Math.floor(x * 60.0);
     var gridY = Math.floor(y * 60.0);
@@ -257,19 +261,18 @@ function draw() {
 	}
 	
 	ctx.beginPath();
+	ctx.fillStyle = "#00ff00";
 	ctx.arc(paint_offset_x+museum_coords[0], paint_offset_y+museum_coords[1], 10, 0, Math.PI*2);
 	ctx.fill();
     }
 
     ctx.restore();
-
-
     
     // Actual player
     ctx.save();
     ctx.translate(320,240);
     if(!track_forward_mode) {
-	ctx.rotate(rot+Math.PI/2);
+	ctx.rotate(-rot+Math.PI/2);
     }
     ctx.drawImage(playerImage, -16,-16);
     ctx.restore();
@@ -338,8 +341,8 @@ function movePlayer()
 }
 
 function processKeys() {
-    if(keysDown[37] || keysDown[65]) rot -= 0.05;
-    if(keysDown[39] || keysDown[68]) rot += 0.05;
+    if(keysDown[37] || keysDown[65]) rot += 0.05;
+    if(keysDown[39] || keysDown[68]) rot -= 0.05;
 }
 
 function drawRepeat() {
@@ -378,6 +381,7 @@ if (canvas.getContext('2d')) {
     ctx = canvas.getContext('2d');
     body.onkeydown = function (event) {
 	var c = event.keyCode;
+	console.log("Key down: "+c);
         keysDown[c] = 1;
 	if(c == 81) {
 	    stopRunloop=true;
@@ -392,6 +396,9 @@ if (canvas.getContext('2d')) {
 	    if(mode == MODE_WIN) {
 		mode = MODE_TITLE;
 	    }
+	}
+	if(c==77) {
+	    track_forward_mode = !track_forward_mode;
 	}
     };
 
