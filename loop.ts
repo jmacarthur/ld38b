@@ -183,7 +183,13 @@ function init()
 function draw() {
     ctx.fillStyle = "#00c000";
     ctx.fillRect(0, 0, SCREENWIDTH, SCREENHEIGHT);
-
+    ctx.save();
+    var track_forward_mode : boolean = true;
+    if(track_forward_mode) {
+	ctx.translate(320,240);
+	ctx.rotate(-rot-Math.PI/2);
+	ctx.translate(-320,-240);
+    }
     if(mode == MODE_TITLE) {
 	ctx.drawImage(titleBitmap, 0, 0);
 	return;
@@ -205,11 +211,13 @@ function draw() {
 	    }
 	}
     }
-
+    ctx.restore();
     // Actual player
     ctx.save();
     ctx.translate(320,240);
-    ctx.rotate(rot+Math.PI/2);
+    if(!track_forward_mode) {
+	ctx.rotate(rot+Math.PI/2);
+    }
     ctx.drawImage(playerImage, -16,-16);
     ctx.restore();
     
@@ -262,8 +270,8 @@ function movePlayer()
 }
 
 function processKeys() {
-    if(keysDown[37] || keysDown[65]) rot -= 0.1;
-    if(keysDown[39] || keysDown[68]) rot += 0.1;
+    if(keysDown[37] || keysDown[65]) rot -= 0.05;
+    if(keysDown[39] || keysDown[68]) rot += 0.05;
 }
 
 function drawRepeat() {
