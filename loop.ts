@@ -197,14 +197,17 @@ function movePlayer()
     var gridX = Math.floor(x * 60.0);
     var gridY = Math.floor(y * 60.0);
     console.log("Looking up grid "+gridX+","+gridY);
-    var mapctx = tile_bitmaps[[gridX,gridY]].getContext('2d');
-    var coords = translate_lonlat(x, y, gridX, gridY);
-    var pixel = mapctx.getImageData(int(coords[0]), int(coords[1]), 1, 1);
+    var tilebitmap = tile_bitmaps[[gridX,gridY]];
     speed = 0.00005;
-    if(pixel.data[0] == 255) {
-	speed = 4*speed;
-    } else {
-	speed = 1*speed;
+    if(tilebitmap != undefined) {
+	var mapctx = tile_bitmaps[[gridX,gridY]].getContext('2d');
+	var coords = translate_lonlat(x, y, gridX, gridY);
+	var pixel = mapctx.getImageData(int(coords[0]), int(coords[1]), 1, 1);
+	if(pixel.data[0] == 255) {
+	    speed = 4*speed;
+	} else {
+	    speed = 1*speed;
+	}
     }
     x += speed* Math.cos(rot);
     y += speed* Math.sin(rot);
