@@ -23,18 +23,17 @@ var smokeAmount : number = 1;
 var stopRunloop : boolean;
 
 // Images loaded from the server
-var bitfont : Image;
-var bitfont16: Image;
+var bitfont;
+var playerImage;
+var museumImage;
 
 // Images created on the fly
-var playerImage : Image;
-var titleBitmap: Image;
-var winBitmap: Image;
-var museumImage : Image;
+var titleBitmap;
+var winBitmap;
 
 function getImage(name)
 {
-    image = new Image();
+    var image = new Image();
     image.src = 'graphics/'+name+'.png';
     return image;
 }
@@ -68,11 +67,11 @@ function makeTitleBitmaps()
     titleBitmap = document.createElement('canvas');
     titleBitmap.width = SCREENWIDTH;
     titleBitmap.height = SCREENHEIGHT;
-    titlectx = titleBitmap.getContext('2d');
+    var titlectx = titleBitmap.getContext('2d');
     winBitmap = document.createElement('canvas');
     winBitmap.width = SCREENWIDTH;
     winBitmap.height = SCREENHEIGHT;
-    winctx = winBitmap.getContext('2d');
+    var winctx = winBitmap.getContext('2d');
     bitfont = new Image();
     bitfont.src = "graphics/bitfont16.png";
     bitfont.onload = function() {
@@ -141,7 +140,7 @@ function drawMap(request, gridX, gridY) {
 	drawString(mapctx, "TILE MISSING "+gridX+","+gridY,32,200);
 	return;
     }
-    lineArray = request.responseText.split("\n");
+    var lineArray : string[] = request.responseText.split("\n");
     var way_lines : string[] = new Array();
     var node_lon = new Array();
     var node_lat = new Array();
@@ -151,7 +150,7 @@ function drawMap(request, gridX, gridY) {
     // do this in the later loop.
     var nodecount : number = 0;
     for(var l = 0;l< lineArray.length; l++) {
-	line = lineArray[l];
+	var line : string = lineArray[l];
 	if(line[0] == "n") {
 	    nodecount +=1 ;
 	}
@@ -168,7 +167,7 @@ function drawMap(request, gridX, gridY) {
 
     
     for(var l = 0;l< lineArray.length; l++) {
-	line = lineArray[l];
+	var line : string = lineArray[l];
 	if(line[0] == "w") {
 	    way_lines.push(line.substr(1));
 	} else if(line[0] == "n") {
@@ -214,10 +213,10 @@ function resetGame()
 
 function updateMuseums(request)
 {
-    lineArray = request.responseText.split("\n");
+    var lineArray : string[] = request.responseText.split("\n");
     for(var l=0;l<lineArray.length;l++) {
 	var line : string = lineArray[l];
-	var fields = line.split(",");
+	var fields :any[] = line.split(",");
 	if(fields.length>=3) {
 	    fields.push(true); // 'Active' field
 	    museums.push(fields);
@@ -255,7 +254,7 @@ function init()
     mode = Mode.TITLE;
     playerImage = getImage("car");
     museumImage = getImage("greek-temple");
-    springSound = new Audio("audio/boing.wav");
+    var springSound = new Audio("audio/boing.wav");
     makeTitleBitmaps();
 
     backgroundLoadTile(-135,3207);
@@ -360,10 +359,11 @@ function draw() {
 
     
     // Finally, head-up display things
-    var hours = Math.floor(time/60);
-    var minutes = Math.floor(time % 60);
-    if(minutes<10) minutes = "0"+minutes;
-    var clocktext : string = hours+":"+minutes;
+    var hours = ""+Math.floor(time/60);
+    var minutes : number = Math.floor(time % 60);
+    var minutes_text : string = ""+minutes
+    if(minutes<10) minutes_text = "0"+minutes_text;
+    var clocktext : string = hours+":"+minutes_text;
     drawString(ctx, clocktext, 580,8);
     
     if(mode == Mode.WIN) {
@@ -396,7 +396,7 @@ function movePlayer()
     var gridX = Math.floor(x * 60.0);
     var gridY = Math.floor(y * 60.0);
     var tilebitmap = tile_bitmaps[[gridX,gridY]];
-    speed = 0.00005;
+    var speed : number = 0.00005;
     if(tilebitmap != undefined) {
 	var mapctx = tile_bitmaps[[gridX,gridY]].getContext('2d');
 	var coords = translate_lonlat(x, y, gridX, gridY);
