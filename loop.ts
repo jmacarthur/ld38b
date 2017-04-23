@@ -14,6 +14,8 @@ var rot :number;
 var tile_bitmaps = new Array();
 var museums = new Array();
 var track_forward_mode : boolean = false;
+var visited : number = 0;
+var total_museums : number = 0;
 
 function getImage(name)
 {
@@ -104,6 +106,17 @@ function drawMap(request, gridX, gridY) {
     makeMap(gridX, gridY);
     var mapctx = tile_bitmaps[[gridX, gridY]].getContext('2d');
 
+    for(var x=0;x<32;x++) {
+	for(var y=0;y<32;y++){
+	    green = Math.floor(Math.random()*64+128);
+	    hex = green.toString(16);
+	    if(hex.length ==1) hex="0"+hex;
+	    mapctx.fillStyle = "#00" + hex + "00";
+	    mapctx.strokeStlye = "none";
+	    mapctx.fillRect(x*16,y*16,16,16);
+	}
+    }
+    
     if(request.status != 200) {
 	mapctx.fillStyle = "#404040";
 	mapctx.fillRect(0,0,512,512);
@@ -116,6 +129,7 @@ function drawMap(request, gridX, gridY) {
     var node_lat = new Array();
     console.log("Map data loaded.");
 
+    
     for(var l = 0;l< lineArray.length; l++) {
 	line = lineArray[l];
 	if(line[0] == "w") {
@@ -161,6 +175,7 @@ function updateMuseums(request)
 	var fields = line.split(",");
 	fields.push(true); // 'Active' field
 	museums.push(fields);
+	total_museums += 1;
     }
 }
 
@@ -333,6 +348,10 @@ function movePlayer()
 	    console.log("Visited "+museums[m][0]);
 	    museums[m][2] = -1;
 	    museums[m][3] = false;
+	    visited += 1;
+	    if(visited == total_museums) {
+		console.log("Game complete!");
+	    }
 	}
     }
 
