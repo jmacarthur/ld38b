@@ -168,13 +168,24 @@ function draw() {
 	ctx.drawImage(titleBitmap, 0, 0);
 	return;
     }
+    var gridX = Math.floor(x * 60.0);
+    var gridY = Math.floor(y * 60.0);
 
-    var coords = translate_lonlat(x, y, -134, 3207);
+    var coords = translate_lonlat(x, y, gridX, gridY);
     var paint_offset_x = Math.floor(-coords[0]+320);
     var paint_offset_y = Math.floor(-coords[1]+240);
-    
-    ctx.drawImage(tile_bitmaps[[-134,3207]], paint_offset_x,paint_offset_y);
-    ctx.drawImage(tile_bitmaps[[-133,3207]], paint_offset_x+512,paint_offset_y);
+    ctx.fillStyle = "#ff00ff";
+    for(var px = gridX - 3; px < gridX + 3; px++) {
+	for(var py = gridY - 3; py < gridY + 3; py++) {
+	    var bitmap = tile_bitmaps[[px,py]];
+	    if(bitmap == undefined) {
+		ctx.fillRect(paint_offset_x+(px-gridX)*512,paint_offset_y+(py-gridY)*512, 512, 512);
+	    } else {
+		ctx.drawImage(bitmap, paint_offset_x+(px-gridX)*512,paint_offset_y+(py-gridY)*512);
+	    }
+	}
+    }
+
     ctx.strokeStyle = "#ff00ff";
     ctx.lineWidth = 4;
     ctx.beginPath();
