@@ -11,6 +11,7 @@ var MODE_WIN   = 2;
 // Game variables
 var x : number, y:number;
 var rot :number;
+var tile_bitmaps = new Array();
 
 function getImage(name)
 {
@@ -61,32 +62,36 @@ function radians(degrees : number) : number
     return Math.PI*2*(degrees/360.0);
 }
 
-function translate_lonlat(lon, lat)
+function translate_lonlat(lon, lat, gridX, gridY)
 {
     // Offset
     //var offsetX = -2.74; var offsetY = 53.296; // Actual minimum of the map
-    var offsetX = -2.2352297; var offsetY = 53.451005; // Somewhere around Princess Parkway
+    //var offsetX = -2.2352297; var offsetY = 53.451005; // Somewhere around Princess Parkway
+    var offsetX = gridX*(1/60.0); var offsetY = gridY*(1/60.0);
     var general_scale = Math.max(0.81,0.31);
-    var general_scale = 1/20; // 1 minute of arc is about 1.1km at this lat
+    var general_scale = 1/60; // 1 minute of arc is about 1.1km at this lat
     var scaleX = (512/general_scale) / Math.cos(radians(offsetY)); // Output scale 0-512, input range 0.81;
     var scaleY = 512/general_scale; // Output scale 0-512, input range 0.31 but using 0.81 to make everything square;
     return [(lon - offsetX) * scaleX, (lat - offsetY) * scaleY];
 }
 
-function makeMap()
+function makeMap(gridX, gridY)
 {
-    mapBitmap = document.createElement('canvas');
+    var mapBitmap = document.createElement('canvas');
     mapBitmap.width = 512;
     mapBitmap.height = 512;
-    mapctx = mapBitmap.getContext('2d');
+    tile_bitmaps[[gridX,gridY]] = mapBitmap;
 }
 
-function drawMap(request) {
+function drawMap(request, gridX, gridY) {
     lineArray = request.responseText.split("\n");
+    makeMap(gridX, gridY);
     var way_lines : string[] = new Array();
     var node_lon = new Array();
     var node_lat = new Array();
     console.log("Map data loaded.");
+    var mapctx = tile_bitmaps[[gridX, gridY]].getContext('2d');
+
     for(var l = 0;l< lineArray.length; l++) {
 	line = lineArray[l];
 	if(line[0] == "w") {
@@ -95,7 +100,7 @@ function drawMap(request) {
 	    var idlonlat = line.substr(1).split(",");
 	    node_lon[idlonlat[0]] = idlonlat[1];
 	    node_lat[idlonlat[0]] = idlonlat[2];
-	    var coords = translate_lonlat(idlonlat[1], idlonlat[2]);
+	    var coords = translate_lonlat(idlonlat[1], idlonlat[2], gridX, gridY);
 	    mapctx.fillStyle = "#ffffff";
 	    mapctx.beginPath();
 	    mapctx.arc(coords[0],coords[1],4,0,2*Math.PI);
@@ -110,12 +115,13 @@ function drawMap(request) {
 	for (var n=0;n<way_nodes.length;n++) {
 	    var lon = node_lon[way_nodes[n]];
 	    var lat = node_lat[way_nodes[n]];
-	    var coords = translate_lonlat(lon, lat);
+	    var coords = translate_lonlat(lon, lat, gridX, gridY);
 	    mapctx.lineTo(coords[0],coords[1],4,0,2*Math.PI);
 	}
 	mapctx.stroke();
 	mapctx.lineWidth = 1;
     }
+
 }
 
 
@@ -133,16 +139,24 @@ function init()
     springSound = new Audio("audio/boing.wav");
     makeTitleBitmaps();
 
-    makeMap();
     var request = new XMLHttpRequest();
-    request.open("GET", "maps/manchester.map", true); // Blocking, todo
+    request.open("GET", "maps/w134n3207.map", true);
     request.onload = function(oEvent) {
 	console.log("Data onLoad called");
-	drawMap(request);
+	drawMap(request,-134,3207);
+	
     }
     console.log("Requested map data.");
     request.send(null);
-    
+
+    var request2 = new XMLHttpRequest();
+    request2.open("GET", "maps/w133n3207.map", true);
+    request2.onload = function(oEvent) {
+	console.log("Data onLoad called");
+	drawMap(request2,-133,3207);
+    }
+    request2.send(null);
+
     return true;
 }
 
@@ -155,7 +169,8 @@ function draw() {
 	return;
     }
 
-    ctx.drawImage(mapBitmap, 0,0);
+    ctx.drawImage(tile_bitmaps[[-134,3207]], 0,0);
+    ctx.drawImage(tile_bitmaps[[-133,3207]], 512,0);
     ctx.strokeStyle = "#ff00ff";
     ctx.beginPath();
     ctx.arc(x, y,8,0,2*Math.PI);
@@ -175,6 +190,7 @@ function int(x)
 
 function movePlayer()
 {
+    var mapctx = tile_bitmaps[[-134,3207]].getContext('2d');
     var pixel = mapctx.getImageData(int(x), int(y), 1, 1);
     if(pixel.data[0] == 255) {
 	speed = 4;
