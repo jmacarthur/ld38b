@@ -181,7 +181,7 @@ function init()
 }
 
 function draw() {
-    ctx.fillStyle = "#0000ff";
+    ctx.fillStyle = "#00c000";
     ctx.fillRect(0, 0, SCREENWIDTH, SCREENHEIGHT);
 
     if(mode == MODE_TITLE) {
