@@ -70,7 +70,7 @@ function translate_lonlat(lon, lat, gridX, gridY)
     var offsetX = gridX*(1/60.0); var offsetY = gridY*(1/60.0);
     var general_scale = Math.max(0.81,0.31);
     var general_scale = 1/60; // 1 minute of arc is about 1.1km at this lat
-    var scaleX = (512/general_scale) / Math.cos(radians(offsetY)); // Output scale 0-512, input range 0.81;
+    var scaleX = 512/general_scale; // Output scale 0-512, input range 0.81;
     var scaleY = 512/general_scale; // Output scale 0-512, input range 0.31 but using 0.81 to make everything square;
     return [(lon - offsetX) * scaleX, (lat - offsetY) * scaleY];
 }
@@ -127,9 +127,9 @@ function drawMap(request, gridX, gridY) {
 
 function resetGame()
 {
-    x = 128;
-    y = 128;
-    rot = 0;
+    x = -2.23;
+    y = 53.45;
+    rot = 0.2;
 }
 
 function init()
@@ -173,9 +173,12 @@ function draw() {
     ctx.drawImage(tile_bitmaps[[-133,3207]], 512,0);
     ctx.strokeStyle = "#ff00ff";
     ctx.beginPath();
-    ctx.arc(x, y,8,0,2*Math.PI);
-    ctx.moveTo(x,y);
-    ctx.lineTo(x+16*Math.cos(rot), y+16*Math.sin(rot))
+
+    var coords = translate_lonlat(x, y, -134, 3207);
+    ctx.arc(coords[0], coords[1],8,0,2*Math.PI);
+    console.log("Plot player at "+coords[0]+", "+coords[1])
+    ctx.moveTo(coords[0],coords[1]);
+    ctx.lineTo(coords[0]+16*Math.cos(rot), coords[1]+16*Math.sin(rot))
     ctx.stroke();
     
     if(mode == MODE_WIN) {
@@ -190,12 +193,18 @@ function int(x)
 
 function movePlayer()
 {
-    var mapctx = tile_bitmaps[[-134,3207]].getContext('2d');
-    var pixel = mapctx.getImageData(int(x), int(y), 1, 1);
+    // Which grid are we in?
+    var gridX = Math.floor(x * 60.0);
+    var gridY = Math.floor(y * 60.0);
+    console.log("Looking up grid "+gridX+","+gridY);
+    var mapctx = tile_bitmaps[[gridX,gridY]].getContext('2d');
+    var coords = translate_lonlat(x, y, gridX, gridY);
+    var pixel = mapctx.getImageData(int(coords[0]), int(coords[1]), 1, 1);
+    speed = 0.00005;
     if(pixel.data[0] == 255) {
-	speed = 4;
+	speed = 4*speed;
     } else {
-	speed = 1;
+	speed = 1*speed;
     }
     x += speed* Math.cos(rot);
     y += speed* Math.sin(rot);
@@ -204,10 +213,6 @@ function movePlayer()
 function processKeys() {
     if(keysDown[37] || keysDown[65]) rot -= 0.1;
     if(keysDown[39] || keysDown[68]) rot += 0.1;
-    if(x < 0) x = 0;
-    if(x > SCREENWIDTH - playerImage.width)  x = SCREENHEIGHT - playerImage.width;
-    if(y < 0) y = 0;
-    if(y > SCREENWIDTH - playerImage.height) y = SCREENHEIGHT - playerImage.height;
 }
 
 function drawRepeat() {
