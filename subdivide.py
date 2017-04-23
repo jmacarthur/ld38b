@@ -9,14 +9,18 @@ def abs(x):
     return -x if x<0 else x
 
 def main():
+    for gridX in range(-140,-130):
+        for gridY in range(3202,3212):
+            generate_map(gridX, gridY)
+
+def generate_map(gridX, gridY):
+    print("Generating %d,%d"%(gridX, gridY))
+    minute = 1/60.0; # Grid size in degrees
     input_filename = sys.argv[1]
     ways = []
     all_nodes = {}
     inside_nodes = []
-    gridX = -133
-    gridY = 3207
-    minute = 1/60.0; # Grid size in degrees
-    
+
     with open(input_filename, "rt") as f:
         while True:
             l = f.readline()
