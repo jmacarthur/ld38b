@@ -30,7 +30,7 @@ function drawChar(context, c, x, y)
 {
     c = c.charCodeAt(0);
     if(c > 0) {
-        context.drawImage(bitfont, c*6, 0, 6,8, x, y, 12, 16);
+        context.drawImage(bitfont, c*12, 0, 12,16, x, y, 12, 16);
     }
 }
 
@@ -59,7 +59,7 @@ function makeTitleBitmaps()
     winBitmap.height = SCREENHEIGHT;
     winctx = winBitmap.getContext('2d');
     bitfont = new Image();
-    bitfont.src = "graphics/bitfont.png";
+    bitfont.src = "graphics/bitfont16.png";
     bitfont.onload = paintTitleBitmaps;
 }
 
