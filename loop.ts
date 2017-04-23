@@ -192,6 +192,7 @@ function init()
 {
     mode = MODE_TITLE;
     playerImage = getImage("car");
+    museumImage = getImage("greek-temple");
     springSound = new Audio("audio/boing.wav");
     makeTitleBitmaps();
 
@@ -260,10 +261,7 @@ function draw() {
 	    ctx.fill();
 	}
 	
-	ctx.beginPath();
-	ctx.fillStyle = "#00ff00";
-	ctx.arc(paint_offset_x+museum_coords[0], paint_offset_y+museum_coords[1], 10, 0, Math.PI*2);
-	ctx.fill();
+	ctx.drawImage(museumImage, paint_offset_x+museum_coords[0]-16, paint_offset_y+museum_coords[1]-18);
     }
 
     ctx.restore();
