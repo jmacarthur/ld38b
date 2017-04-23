@@ -8,6 +8,10 @@ var MODE_TITLE = 0;
 var MODE_PLAY  = 1;
 var MODE_WIN   = 2;
 
+// Game variables
+var x : number, y:number;
+var rot :number;
+
 function getImage(name)
 {
     image = new Image();
@@ -99,6 +103,7 @@ function resetGame()
 {
     x = 128;
     y = 128;
+    rot = 0;
 }
 
 function init()
@@ -131,18 +136,27 @@ function draw() {
     }
 
     ctx.drawImage(mapBitmap, 0,0);
-    ctx.drawImage(playerImage, x, y);
+    ctx.strokeStyle = "#ff00ff";
+    ctx.beginPath();
+    ctx.arc(x, y,8,0,2*Math.PI);
+    ctx.moveTo(x,y);
+    ctx.lineTo(x+16*Math.cos(rot), y+16*Math.sin(rot))
+    ctx.stroke();
     
     if(mode == MODE_WIN) {
 	ctx.drawImage(winBitmap, 0, 0);
     }
 }
 
+function movePlayer()
+{
+    x += 4* Math.cos(rot);
+    y += 4* Math.sin(rot);
+}
+
 function processKeys() {
-    if(keysDown[40] || keysDown[83]) y += 4;
-    if(keysDown[38] || keysDown[87]) y -= 4;
-    if(keysDown[37] || keysDown[65]) x -= 4;
-    if(keysDown[39] || keysDown[68]) x += 4;
+    if(keysDown[37] || keysDown[65]) rot -= 0.1;
+    if(keysDown[39] || keysDown[68]) rot += 0.1;
     if(x < 0) x = 0;
     if(x > SCREENWIDTH - playerImage.width)  x = SCREENHEIGHT - playerImage.width;
     if(y < 0) y = 0;
@@ -153,7 +167,9 @@ function drawRepeat() {
     if(mode != MODE_TITLE) {
 	processKeys();
     }
+    movePlayer();
     draw();
+   
     if(!stopRunloop) setTimeout('drawRepeat()',20);
 }
 
