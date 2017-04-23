@@ -105,21 +105,20 @@ function drawRoad(mapctx, way_nodes, width, colour, node_lon, node_lat, gridX, g
     mapctx.lineWidth = 1;
 }
 
+function makeHTMLColour(red: number, green: number, blue: number) : string
+{
+    var greenhex = green.toString(16);
+    if(greenhex.length == 1) greenhex="0"+greenhex;
+    var redhex = red.toString(16);
+    if(redhex.length == 1) redhex="0"+redhex;
+    var bluehex = blue.toString(16);
+    if(bluehex.length == 1) bluehex="0"+bluehex;
+    return "#" + redhex+greenhex+bluehex;
+}
 
 function drawMap(request, gridX, gridY) {
     makeMap(gridX, gridY);
     var mapctx = tile_bitmaps[[gridX, gridY]].getContext('2d');
-
-    for(var x=0;x<32;x++) {
-	for(var y=0;y<32;y++){
-	    green = Math.floor(Math.random()*64+128);
-	    hex = green.toString(16);
-	    if(hex.length ==1) hex="0"+hex;
-	    mapctx.fillStyle = "#00" + hex + "00";
-	    mapctx.strokeStlye = "none";
-	    mapctx.fillRect(x*16,y*16,16,16);
-	}
-    }
     
     if(request.status != 200) {
 	mapctx.fillStyle = "#404040";
@@ -132,6 +131,25 @@ function drawMap(request, gridX, gridY) {
     var node_lon = new Array();
     var node_lat = new Array();
     console.log("Map data loaded.");
+
+    // Inefficient means of counting total nodes - would be better to
+    // do this in the later loop.
+    var nodecount : number = 0;
+    for(var l = 0;l< lineArray.length; l++) {
+	line = lineArray[l];
+	if(line[0] == "n") {
+	    nodecount +=1 ;
+	}
+    }
+
+    for(var x=0;x<32;x++) {
+	for(var y=0;y<32;y++){
+	    mapctx.fillStyle = makeHTMLColour(Math.floor(Math.random()*(nodecount/5)), Math.floor(Math.random()*64+128),
+					     0);
+	    mapctx.strokeStlye = "none";
+	    mapctx.fillRect(x*16,y*16,16,16);
+	}
+    }
 
     
     for(var l = 0;l< lineArray.length; l++) {
@@ -344,7 +362,7 @@ function movePlayer()
 	var mapctx = tile_bitmaps[[gridX,gridY]].getContext('2d');
 	var coords = translate_lonlat(x, y, gridX, gridY);
 	var pixel = mapctx.getImageData(int(coords[0]), int(coords[1]), 1, 1);
-	if(pixel.data[0] > 0) {
+	if(pixel.data[2] > 0) {
 	    targetSpeed = 4;
 	} else {
 	    targetSpeed = 1;
