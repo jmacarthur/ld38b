@@ -16,7 +16,9 @@ var museums = new Array();
 var track_forward_mode : boolean = false;
 var visited : number = 0;
 var total_museums : number = 0;
-
+var time : number = 0;
+var targetSpeed : number = 0;
+var actualSpeed : number = 0;
 function getImage(name)
 {
     image = new Image();
@@ -165,6 +167,7 @@ function resetGame()
     x = -2.23;
     y = 53.45;
     rot = 0.2;
+    time = 9*60;
 }
 
 function updateMuseums(request)
@@ -173,9 +176,11 @@ function updateMuseums(request)
     for(var l=0;l<lineArray.length;l++) {
 	var line : string = lineArray[l];
 	var fields = line.split(",");
-	fields.push(true); // 'Active' field
-	museums.push(fields);
-	total_museums += 1;
+	if(fields.length>=3) {
+	    fields.push(true); // 'Active' field
+	    museums.push(fields);
+	    total_museums += 1;
+	}
     }
 }
 
@@ -289,6 +294,13 @@ function draw() {
     }
     ctx.drawImage(playerImage, -16,-16);
     ctx.restore();
+
+    // Finally, head-up display things
+    var hours = Math.floor(time/60);
+    var minutes = Math.floor(time % 60);
+    if(minutes<10) minutes = "0"+minutes;
+    var clocktext : string = hours+":"+minutes;
+    drawString(ctx, clocktext, 580,8);
     
     if(mode == MODE_WIN) {
 	ctx.drawImage(winBitmap, 0, 0);
@@ -326,13 +338,18 @@ function movePlayer()
 	var coords = translate_lonlat(x, y, gridX, gridY);
 	var pixel = mapctx.getImageData(int(coords[0]), int(coords[1]), 1, 1);
 	if(pixel.data[0] > 0) {
-	    speed = 4*speed;
+	    targetSpeed = 4;
 	} else {
-	    speed = 1*speed;
+	    targetSpeed = 1;
 	}
     }
-    x += speed* Math.cos(rot);
-    y += speed* Math.sin(rot);
+    if(actualSpeed > targetSpeed) {
+	actualSpeed -= 0.1;
+    } else {
+	actualSpeed += 0.1;
+    }
+    x += actualSpeed * speed * Math.cos(rot);
+    y += actualSpeed * speed * Math.sin(rot);
 
     // Check and load maps if necessary
     loadMoreMaps();
@@ -345,16 +362,18 @@ function movePlayer()
 	var threshold_metres = 50;
 	var threshold_degrees = threshold_metres*0.001/60.0;
 	if(dist_sq < threshold_degrees*threshold_degrees) {
-	    console.log("Visited "+museums[m][0]);
 	    museums[m][2] = -1;
 	    museums[m][3] = false;
 	    visited += 1;
+	    console.log("Visited "+museums[m][0]+". "+visited+" of "+total_museums+" visited.");
 	    if(visited == total_museums) {
 		console.log("Game complete!");
 	    }
 	}
     }
-
+    if(visited < total_museums) {
+	time += 0.1;
+    }
 }
 
 function processKeys() {
