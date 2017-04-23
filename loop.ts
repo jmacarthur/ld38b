@@ -170,7 +170,7 @@ function backgroundLoadTile(gridX, gridY)
 function init()
 {
     mode = MODE_TITLE;
-    playerImage = getImage("player");
+    playerImage = getImage("car");
     springSound = new Audio("audio/boing.wav");
     makeTitleBitmaps();
 
@@ -206,14 +206,12 @@ function draw() {
 	}
     }
 
-    ctx.strokeStyle = "#ff00ff";
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-
-    ctx.arc(320,240,8,0,2*Math.PI);
-    ctx.moveTo(320,240);
-    ctx.lineTo(320+16*Math.cos(rot), 240+16*Math.sin(rot))
-    ctx.stroke();
+    // Actual player
+    ctx.save();
+    ctx.translate(320,240);
+    ctx.rotate(rot+Math.PI/2);
+    ctx.drawImage(playerImage, -16,-16);
+    ctx.restore();
     
     if(mode == MODE_WIN) {
 	ctx.drawImage(winBitmap, 0, 0);
