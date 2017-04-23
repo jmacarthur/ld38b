@@ -52,6 +52,49 @@ function makeTitleBitmaps()
     bitfont.onload = paintTitleBitmaps;
 }
 
+function translate_lonlat(lon, lat)
+{
+    // Offset
+    var offsetX = -2.74;
+    var offsetY = 53.296;
+    var scaleX = 512/0.81; // Output scale 0-512, input range 0.81;
+    var scaleY = 512/0.81; // Output scale 0-512, input range 0.31 but using 0.81 to make everything square;
+    
+    return [(lon - offsetX) * scaleX, (lat - offsetY) * scaleY];
+}
+
+function makeMap()
+{
+    mapBitmap = document.createElement('canvas');
+    mapBitmap.width = 512;
+    mapBitmap.height = 512;
+    mapctx = mapBitmap.getContext('2d');
+}
+
+function drawMap(request) {
+    lineArray = request.responseText.split("\n");
+    var way_lines : string[] = new Array();
+    var node_lon = new Array();
+    var node_lat = new Array();
+    console.log("Map data loaded.");
+    for(var l = 0;l< lineArray.length; l++) {
+	line = lineArray[l];
+	if(line[0] == "w") {
+	    way_lines.push(line);
+	} else if(line[0] == "n") {
+	    var idlonlat = line.substr(1).split(",");
+	    node_lon[idlonlat[0]] = idlonlat[1];
+	    node_lat[idlonlat[0]] = idlonlat[2];
+	    var coords = translate_lonlat(idlonlat[1], idlonlat[2]);
+	    mapctx.strokeStyle = "#fffff"
+	    mapctx.beginPath();
+	    mapctx.arc(coords[0],coords[1],4,0,2*Math.PI);
+	    mapctx.stroke();
+	}
+    }
+}
+
+
 function resetGame()
 {
     x = 128;
@@ -64,6 +107,17 @@ function init()
     playerImage = getImage("player");
     springSound = new Audio("audio/boing.wav");
     makeTitleBitmaps();
+
+    makeMap();
+    var request = new XMLHttpRequest();
+    request.open("GET", "maps/manchester.map", true); // Blocking, todo
+    request.onload = function(oEvent) {
+	console.log("Data onLoad called");
+	drawMap(request);
+    }
+    console.log("Requested map data.");
+    request.send(null);
+    
     return true;
 }
 
@@ -76,8 +130,9 @@ function draw() {
 	return;
     }
 
+    ctx.drawImage(mapBitmap, 0,0);
     ctx.drawImage(playerImage, x, y);
-
+    
     if(mode == MODE_WIN) {
 	ctx.drawImage(winBitmap, 0, 0);
     }
