@@ -169,16 +169,19 @@ function draw() {
 	return;
     }
 
-    ctx.drawImage(tile_bitmaps[[-134,3207]], 0,0);
-    ctx.drawImage(tile_bitmaps[[-133,3207]], 512,0);
+    var coords = translate_lonlat(x, y, -134, 3207);
+    var paint_offset_x = Math.floor(-coords[0]+320);
+    var paint_offset_y = Math.floor(-coords[1]+240);
+    
+    ctx.drawImage(tile_bitmaps[[-134,3207]], paint_offset_x,paint_offset_y);
+    ctx.drawImage(tile_bitmaps[[-133,3207]], paint_offset_x+512,paint_offset_y);
     ctx.strokeStyle = "#ff00ff";
+    ctx.lineWidth = 4;
     ctx.beginPath();
 
-    var coords = translate_lonlat(x, y, -134, 3207);
-    ctx.arc(coords[0], coords[1],8,0,2*Math.PI);
-    console.log("Plot player at "+coords[0]+", "+coords[1])
-    ctx.moveTo(coords[0],coords[1]);
-    ctx.lineTo(coords[0]+16*Math.cos(rot), coords[1]+16*Math.sin(rot))
+    ctx.arc(320,240,8,0,2*Math.PI);
+    ctx.moveTo(320,240);
+    ctx.lineTo(320+16*Math.cos(rot), 240+16*Math.sin(rot))
     ctx.stroke();
     
     if(mode == MODE_WIN) {
