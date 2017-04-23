@@ -61,8 +61,10 @@ function translate_lonlat(lon, lat)
     // Offset
     var offsetX = -2.74;
     var offsetY = 53.296;
-    var scaleX = 512/0.81; // Output scale 0-512, input range 0.81;
-    var scaleY = 512/0.81; // Output scale 0-512, input range 0.31 but using 0.81 to make everything square;
+    var general_scale = Math.max(0.81,0.31);
+    var general_scale = 0.5; // For testing
+    var scaleX = 512/general_scale; // Output scale 0-512, input range 0.81;
+    var scaleY = 512/general_scale; // Output scale 0-512, input range 0.31 but using 0.81 to make everything square;
     
     return [(lon - offsetX) * scaleX, (lat - offsetY) * scaleY];
 }
@@ -90,7 +92,7 @@ function drawMap(request) {
 	    node_lon[idlonlat[0]] = idlonlat[1];
 	    node_lat[idlonlat[0]] = idlonlat[2];
 	    var coords = translate_lonlat(idlonlat[1], idlonlat[2]);
-	    mapctx.strokeStyle = "#fffff"
+	    mapctx.strokeStyle = "#ffffff";
 	    mapctx.beginPath();
 	    mapctx.arc(coords[0],coords[1],4,0,2*Math.PI);
 	    mapctx.stroke();
@@ -148,10 +150,21 @@ function draw() {
     }
 }
 
+function int(x)
+{
+    return Math.floor(x);
+}
+
 function movePlayer()
 {
-    x += 4* Math.cos(rot);
-    y += 4* Math.sin(rot);
+    var pixel = mapctx.getImageData(int(x), int(y), 1, 1);
+    if(pixel.data[0] == 255) {
+	speed = 4;
+    } else {
+	speed = 1;
+    }
+    x += speed* Math.cos(rot);
+    y += speed* Math.sin(rot);
 }
 
 function processKeys() {
@@ -167,7 +180,10 @@ function drawRepeat() {
     if(mode != MODE_TITLE) {
 	processKeys();
     }
-    movePlayer();
+
+    if(mode == MODE_PLAY) {
+	movePlayer();
+    }
     draw();
    
     if(!stopRunloop) setTimeout('drawRepeat()',20);
