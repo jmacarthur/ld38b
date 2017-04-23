@@ -12,6 +12,7 @@ var MODE_WIN   = 2;
 var x : number, y:number;
 var rot :number;
 var tile_bitmaps = new Array();
+var museums = new Array();
 
 function getImage(name)
 {
@@ -152,6 +153,17 @@ function resetGame()
     rot = 0.2;
 }
 
+function updateMuseums(request)
+{
+    lineArray = request.responseText.split("\n");
+    for(var l=0;l<lineArray.length;l++) {
+	var line : string = lineArray[l];
+	var fields = line.split(",");
+	fields.push(true); // 'Active' field
+	museums.push(fields);
+    }
+}
+
 function backgroundLoadTile(gridX, gridY)
 {
     var request = new XMLHttpRequest();
@@ -162,9 +174,18 @@ function backgroundLoadTile(gridX, gridY)
     request.onload = function(oEvent) {
 	drawMap(request,gridX,gridY);
     }
-    console.log("Requested map data for "+gridX+","+gridY);
     request.send(null);
 
+}
+
+function backgroundLoadGoals()
+{
+    var request = new XMLHttpRequest();
+    request.open("GET", "maps/museums.csv", true);
+    request.onload = function(oEvent) {
+	updateMuseums(request);
+    }
+    request.send(null);
 }
 
 function init()
@@ -176,7 +197,7 @@ function init()
 
     backgroundLoadTile(-134,3207);
     backgroundLoadTile(-133,3207);
-
+    backgroundLoadGoals();
     return true;
 }
 
@@ -184,7 +205,7 @@ function draw() {
     ctx.fillStyle = "#00c000";
     ctx.fillRect(0, 0, SCREENWIDTH, SCREENHEIGHT);
     ctx.save();
-    var track_forward_mode : boolean = true;
+    var track_forward_mode : boolean = false;;
     if(track_forward_mode) {
 	ctx.translate(320,240);
 	ctx.rotate(-rot-Math.PI/2);
@@ -211,7 +232,39 @@ function draw() {
 	    }
 	}
     }
+
+    // Museums
+    for(var m:number=0;m<museums.length;m++) {
+	if(!museums[m][3]) { continue; }
+	var mx = museums[m][1];
+	var my = museums[m][2];
+	var museum_coords = translate_lonlat(mx, my, gridX, gridY);
+	ctx.beginPath();
+	ctx.fillStyle = "#00ff00";
+	var px = mx - x;
+	var py = my - y;
+	var angle = Math.atan2(py,px);
+	var dist_sq = px*px+py*py;
+	var threshold = 0.5/60.0;
+	if(dist_sq > threshold*threshold) {
+	    ctx.beginPath();
+	    ctx.fillStyle = "#ffff00";
+	    var arrowWidth = 0.02;
+	    ctx.moveTo(320+180*Math.cos(angle-arrowWidth), 240+180*Math.sin(angle-arrowWidth));
+	    ctx.lineTo(320+180*Math.cos(angle+arrowWidth), 240+180*Math.sin(angle+arrowWidth));
+	    ctx.lineTo(320+192*Math.cos(angle), 240+192*Math.sin(angle));
+	    ctx.fill();
+	}
+	
+	ctx.beginPath();
+	ctx.arc(paint_offset_x+museum_coords[0], paint_offset_y+museum_coords[1], 10, 0, Math.PI*2);
+	ctx.fill();
+    }
+
     ctx.restore();
+
+
+    
     // Actual player
     ctx.save();
     ctx.translate(320,240);
@@ -267,6 +320,21 @@ function movePlayer()
 
     // Check and load maps if necessary
     loadMoreMaps();
+
+    // Collect targets?
+    for(var m:number=0;m<museums.length;m++) {
+	var mx = museums[m][1];
+	var my = museums[m][2];
+	var dist_sq : number = (x-mx)*(x-mx)+(y-my)*(y-my);
+	var threshold_metres = 50;
+	var threshold_degrees = threshold_metres*0.001/60.0;
+	if(dist_sq < threshold_degrees*threshold_degrees) {
+	    console.log("Visited "+museums[m][0]);
+	    museums[m][2] = -1;
+	    museums[m][3] = false;
+	}
+    }
+
 }
 
 function processKeys() {
