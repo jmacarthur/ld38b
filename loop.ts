@@ -44,7 +44,9 @@ function drawString(context, string, x, y) {
 
 function paintTitleBitmaps()
 {
-    drawString(titlectx, 'This is a demo of the JavaScript/HTML5 game loop',32,32);
+    drawString(titlectx, 'Driving simulator for small worlds',32,32);
+    drawString(titlectx, 'Visit all museums before the end of the day.',32,64);
+    drawString(titlectx, 'Left/right to steer. Press space to start',32,64+32);
     drawString(winctx, 'Your game should always have an ending',32,32);
 }
 
@@ -184,7 +186,7 @@ function updateMuseums(request)
     }
 }
 
-function backgroundLoadTile(gridX, gridY)
+function backgroundLoadTile(gridX, gridY) : void
 {
     var request = new XMLHttpRequest();
     var prefix_lon = gridX < 0 ? "w" : "e";
@@ -216,8 +218,13 @@ function init()
     springSound = new Audio("audio/boing.wav");
     makeTitleBitmaps();
 
+    backgroundLoadTile(-135,3207);
     backgroundLoadTile(-134,3207);
     backgroundLoadTile(-133,3207);
+    backgroundLoadTile(-135,3206);
+    backgroundLoadTile(-134,3206);
+    backgroundLoadTile(-133,3206);
+
     backgroundLoadGoals();
     return true;
 }
